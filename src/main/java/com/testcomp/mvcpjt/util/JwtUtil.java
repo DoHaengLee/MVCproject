@@ -3,26 +3,24 @@ package com.testcomp.mvcpjt.util;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
-import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.testcomp.mvcpjt.ApiController;
-
 import java.util.HashMap;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.sql.Timestamp;
 
-import io.jsonwebtoken.security.Keys;
+import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
+import com.testcomp.mvcpjt.JwtController;
+import com.testcomp.mvcpjt.util.db.UserDTO;
 
 
 public class JwtUtil {
@@ -32,7 +30,7 @@ public class JwtUtil {
 	private static String issuer = "Jess";
 	private static String headerType = "JWT";
 	private static String headerAlg = "HS256";
-	private static UserDAO uDAO = new UserDAO();
+	private static UserUtil uUtil = new UserUtil();
 	private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
     // 전체 토큰 만료 - 1시간, 액세스 토큰 만료 30분, 리프레시 토큰 만료 8시간  
@@ -144,7 +142,7 @@ public class JwtUtil {
         Date refExp = (Date) wholeMap.get("refexp");
         Timestamp refExpTs = new Timestamp(refExp.getTime());
         uDTO.setRefexp(refExpTs);
-        boolean updone2 = uDAO.updateUser(uDTO);
+        boolean updone2 = uUtil.updateUser(uDTO);
         if(updone2) {
         	result = true;
         	resMap.put("whole_token",whole_token);
@@ -179,7 +177,7 @@ public class JwtUtil {
         Timestamp refExpTs = new Timestamp(refExp.getTime());
         uDTO.setAccexp(accExpTs);
         uDTO.setRefexp(refExpTs);
-        boolean updone2 = uDAO.updateUser(uDTO);
+        boolean updone2 = uUtil.updateUser(uDTO);
         if(updone2) {
         	result = true;
         	resMap.put("whole_token",whole_token);
@@ -285,7 +283,7 @@ public class JwtUtil {
         	if(issuer.equals(issuerChk)) {
         		String userChk = jwtMap.get("userid").toString();
         		if(uDTO.getId().equals(userChk)) {
-                	boolean exists = uDAO.existUser(uDTO);
+                	boolean exists = uUtil.existUser(uDTO);
                 	if(exists) {
                 		res = true;
                 	}
@@ -306,7 +304,7 @@ public class JwtUtil {
         	Map<String,Object> jwtMap = getEach(jws);
         	String sub = jwtMap.get("sub").toString();
         	
-    		Map<String,Object> userMap = uDAO.getUser(uDTO);
+    		Map<String,Object> userMap = uUtil.getUser(uDTO);
     		if(userMap.get("accexp") != null) {
     			Date accessExp = null;
     			if(sub.equals("whole_token")) {

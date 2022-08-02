@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.simple.JSONObject;
 
+import com.testcomp.mvcpjt.util.db.UserDTO;
+
 
 
 public class ApiUtil {
@@ -117,7 +119,6 @@ public class ApiUtil {
 		Map<String,Object> tokenMap = new HashMap<String,Object>();
 			try {
 				String test = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-				//System.out.println("test : "+test);
 				tokenMap.put("result", true);
 				tokenMap.put("body", test);
 			} catch (Exception e) {

@@ -4,18 +4,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 public class ViewController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ViewController.class);
 	
+	// 메인 페이지
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public String home() {
+		return "home";
+	}
+	
 	// 사용자 등록 페이지 (POST랑 GET 둘 다 가능하게 하려면 아예 method=RequestMethod.POST를 지우면 됨)
 	@RequestMapping(value = "/signup_view")
 	public String signupView() {	
-		return "jwt/signup_view";
+		return "user/signup_view";
 	}
 	
+	/* JWT */
 	// ID/PW로 토큰 획득 페이지
 	@RequestMapping(value = "/tokenpw_view")
 	public String tokenpwView() {	
@@ -32,5 +40,18 @@ public class ViewController {
 	@RequestMapping(value = "/tokentest_view")
 	public String tokentestView() {	
 		return "jwt/tokentest_view";
+	}
+	
+	/* OTP */
+	// ID/PW로 OTP 획득 페이지
+	@RequestMapping(value = "/otpgen_view")
+	public String otpgenView() {	
+		return "otp/otpgen_view";
+	}
+	
+	// OTP 인증 페이지
+	@RequestMapping(value = "/otpchk_view")
+	public String otpchkView() {	
+		return "otp/otpchk_view";
 	}
 }

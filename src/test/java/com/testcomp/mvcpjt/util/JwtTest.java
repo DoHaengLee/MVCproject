@@ -9,18 +9,11 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.sql.Timestamp;
 import java.util.Date;
-import java.util.HashMap;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 
-import org.springframework.security.crypto.bcrypt.BCrypt;
-
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import io.jsonwebtoken.security.Keys;
+import com.testcomp.mvcpjt.util.db.UserDTO;
 
 
 
@@ -28,55 +21,23 @@ public class JwtTest {
 
 	private static final Logger logger = LoggerFactory.getLogger(JwtTest.class);
 
+	//given
 	private static String uid = "userid1";
 	private static String pwd = "password1";
+	private static UserDTO dto = new UserDTO(uid, pwd);
+	private static UserUtil uUtil = new UserUtil();
+	// 전체토큰 - 2초만 유효 액세스토큰 - 15초만 유효, 리프레시토큰 - 30초만 유효
+	private static long tokenValidMilisecond = 1000L * 2;
+	private static long accessValidMilisecond = 1000L * 15;
+	private static long refreshValidMilisecond = 1000L * 30;
+    // 객체 생성 w/ 초기화
+	private static JwtUtil jUtil = new JwtUtil(tokenValidMilisecond,accessValidMilisecond,refreshValidMilisecond);
 
 	
 	@Test
-	public void test() {
+	public void testJwt() {
+		logger.info("*** testJwt START ***");
 
-		logger.info("[0] uid : "+uid);
-		logger.info("[0] pwd : "+pwd);
-		
-		
-		/* User */
-		logger.info("*** User START ***");
-
-		// given
-		// 객체 생성 w/ 초기화
-		UserDAO dao = new UserDAO();
-		UserDTO dto = new UserDTO(uid, pwd);
-		UserUtil uUtil = new UserUtil();
-		// when
-		Map<String,Object> regdoneObj = uUtil.regUserIfNeeded(dto);
-		boolean regdone = (boolean) regdoneObj.get("result");
-		logger.info("regdone : "+regdone);
-		if(!regdone) {
-			// 이미 등록한 사람일 경우 false / "Already Registered"
-			logger.info(regdoneObj.get("msg").toString());
-		}
-		
-		// when
-		dto.setPw(pwd+"1");
-		logger.info("[1] ID/PW (Must be false) : "+uUtil.correctUser(dto));
-        assertEquals(false,uUtil.correctUser(dto));
-        dto.setPw(pwd);
-		logger.info("[2] ID/PW (Must be true) : "+uUtil.correctUser(dto));
-        assertEquals(true,uUtil.correctUser(dto));
-        
-		
-
-        /* JWT */
-		logger.info("*** JwtUtil START ***");
-        
-		//given
-        // 전체토큰 - 2초만 유효 액세스토큰 - 15초만 유효, 리프레시토큰 - 30초만 유효
-		long tokenValidMilisecond = 1000L * 2;
-        long accessValidMilisecond = 1000L * 15;
-        long refreshValidMilisecond = 1000L * 30;
-        // 객체 생성 w/ 초기화
-        JwtUtil jUtil = new JwtUtil(tokenValidMilisecond,accessValidMilisecond,refreshValidMilisecond);
-	
         // when
         // 신규 생성 시나리오 테스트 - DB update 전까지는 validateTokenSub로 검증
         // whole_token 생성
@@ -127,7 +88,7 @@ public class JwtTest {
                 Timestamp refExpTs = new Timestamp(refExp.getTime());
                 dto.setRefexp(refExpTs);
 
-                boolean updone = dao.updateUser(dto);
+                boolean updone = uUtil.updateUser(dto);
                 // then - 사용자 업데이트 정상
                 assertEquals(true,updone);
                 if(updone) {
@@ -171,7 +132,7 @@ public class JwtTest {
                             Date refExp2 = (Date) wholeMap2.get("refexp");
                             Timestamp refExpTs2 = new Timestamp(refExp2.getTime());
                             dto.setRefexp(refExpTs2);
-                            boolean updone2 = dao.updateUser(dto);
+                            boolean updone2 = uUtil.updateUser(dto);
                             
                             logger.info("[7] reUseToken (Must be false) : "+jUtil.validateTokenExp(whole_tokenJic, dto));
                             assertEquals(false, jUtil.validateTokenExp(whole_tokenJic, dto));
@@ -199,7 +160,7 @@ public class JwtTest {
                 }
             }
         }
-        logger.info("*** JwtUtil END ***");
+        logger.info("");
 	}
 
 }
