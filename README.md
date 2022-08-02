@@ -8,7 +8,7 @@
 ---
 **USER**
 1. signup_view : 사용자 등록 페이지 (필수)
-- bcrypt로 pw 암호화 하여 저장
+- bcrypt로 암호화 하여 pw 저장
 
 #
 **JWT**
@@ -23,4 +23,5 @@
 **OTP**
 1. otpgen_view : ID/PW로 OTP 발급 페이지
 2. otpchk_view : ID/PW/OTP 인증 페이지
+- AES256으로 암호화 하여 seed 저장
 - OTP 재사용 방지 로직 추가
