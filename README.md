@@ -12,7 +12,7 @@
 
 #
 **JWT**
-1. tokenpw_ivew : ID/PW로 토큰 발급 페이지
+1. tokenpw_view : ID/PW로 토큰 발급 페이지
 2. tokenref_view : Refresh Token으로 재발급 페이지
 3. testapi_view : Access Token을 필요로 하는 테스트페이지
 - jjwt를 활용해 토큰 발급 및 검증
