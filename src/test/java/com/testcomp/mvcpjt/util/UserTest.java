@@ -24,7 +24,7 @@ public class UserTest {
 	
 			
 	@Test
-	public void testReg() {
+	public void testReg() throws Exception {
 		logger.info("*** testReg ***");
 		// when - 등록되지 않은 사용자는 등록
 		Map<String,Object> regdoneObj = uUtil.regUserIfNeeded(dto);
@@ -40,7 +40,7 @@ public class UserTest {
 	}
 	
 	@Test
-	public void testPw() {
+	public void testPw() throws Exception {
 		logger.info("*** testPw ***");
 		
 		// when - 틀린 패스워드

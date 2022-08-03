@@ -47,77 +47,18 @@ public class OtpController {
 
 	// 로그인으로 OTP 발급 API
 	@RequestMapping(value = "/otpgen", method = RequestMethod.POST)
-	public JSONObject otpgen(HttpServletRequest request, HttpServletResponse response) {
+	public JSONObject otpgen(HttpServletRequest request) throws Exception {
 		logger.info("otpgen BEGEIN");
-		JSONObject jObj = new JSONObject();
-		boolean result = false;
-		String msg = "";
-
-		Map<String,Object> jic = aUtil.readBody(request);
-		if((boolean)jic.get("result")) {
-			try {
-				String body = jic.get("body").toString();
-				UserDTO uDTO = uUtil.getUserFromStr(body);
-				if(uUtil.correctUser(uDTO)) {
-					ArrayList<String> usrOtpList = oUtil.genOtpNupdate(uDTO);
-					result = true;
-					jObj.put("otp_info", usrOtpList);
-				} else {
-					msg = "Wrong PW / Unregistered User";
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} else {
-			msg = jic.get("msg").toString();
-		}
-		
-		jObj.put("result", result);
-		if(!result) {
-			jObj.put("msg", msg);
-		}
+		JSONObject jObj =  new JSONObject(oUtil.otpgen(request));
 		logger.info("otpgen Res : "+jObj);
 		return jObj;
 	}
 	
 	// OTP 인증 API
 	@RequestMapping(value = "/otpchk", method = RequestMethod.POST)
-	public JSONObject otpchk(HttpServletRequest request, HttpServletResponse response) {
+	public JSONObject otpchk(HttpServletRequest request) throws Exception {
 		logger.info("otpchk BEGEIN");
-		JSONObject jObj = new JSONObject();
-		boolean result = false;
-		String msg = "";
-
-		Map<String,Object> jic = aUtil.readBody(request);
-		if((boolean)jic.get("result")) {
-			try {
-				String body = jic.get("body").toString();
-				UserDTO uDTO = uUtil.getUserFromStr(body);
-				if(uUtil.correctUser(uDTO)) {
-					
-					JSONParser parser = new JSONParser();
-					JSONObject jObj2 = (JSONObject) parser.parse(body);
-					String typed = (String) jObj2.get("otp");
-					
-					Map<String,Object> chkCorrectRes = oUtil.checkOTPnUpdate(uDTO, typed);
-					result = (boolean) chkCorrectRes.get("result");
-					if(!result) {
-						msg = chkCorrectRes.get("msg").toString();
-					}
-				} else {
-					msg = "Wrong PW / Unregistered User";
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} else {
-			msg = jic.get("msg").toString();
-		}
-		
-		jObj.put("result", result);
-		if(!result) {
-			jObj.put("msg", msg);
-		}
+		JSONObject jObj =  new JSONObject(oUtil.otpchk(request));
 		logger.info("otpchk Res : "+jObj);
 		return jObj;
 	}

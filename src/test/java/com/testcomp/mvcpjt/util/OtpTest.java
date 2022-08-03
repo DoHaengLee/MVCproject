@@ -22,7 +22,7 @@ public class OtpTest {
 
 	
 	@Test
-	public void testOtp() {
+	public void testOtp() throws Exception {
 		logger.info("*** testOtp START ***");
 		
 		// OTP ¹ß±Þ

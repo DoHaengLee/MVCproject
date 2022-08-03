@@ -20,7 +20,7 @@ import com.testcomp.mvcpjt.util.db.UserDTO;
 
 public class ApiUtil {
 	
-	public String sendReq(String urlStr, JSONObject jObj) {
+	public String sendReq(String urlStr, JSONObject jObj) throws Exception {
 		System.out.println("sendReq");
 		String reqStr = "";
 		try {
@@ -66,7 +66,7 @@ public class ApiUtil {
 		return reqStr;
 	}
 	
-	public Map<String,Object> chkHeaderToken(HttpServletRequest request, String sub) {
+	public Map<String,Object> chkHeaderToken(HttpServletRequest request, String sub) throws Exception {
 		Map<String,Object> resMap = new HashMap<String,Object>();
 		boolean res = false;
 		String msg = "";
@@ -103,19 +103,15 @@ public class ApiUtil {
 		return resMap;
 	}
 	
-	public Map<String,Object> readReq(HttpServletRequest request, String sub) {
+	public Map<String,Object> readReq(HttpServletRequest request, String sub) throws Exception {
 		Map<String,Object> tokenMap = chkHeaderToken(request, sub);
 		if((boolean)tokenMap.get("result")) {
-			try {
-				tokenMap = readBody(request);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			tokenMap = readBody(request);
 		}
 		return tokenMap;
 	}
 	
-	public Map<String,Object> readBody(HttpServletRequest request) {
+	public Map<String,Object> readBody(HttpServletRequest request) throws Exception {
 		Map<String,Object> tokenMap = new HashMap<String,Object>();
 			try {
 				String test = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));

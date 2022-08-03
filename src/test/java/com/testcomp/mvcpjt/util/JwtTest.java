@@ -35,7 +35,7 @@ public class JwtTest {
 
 	
 	@Test
-	public void testJwt() {
+	public void testJwt() throws Exception {
 		logger.info("*** testJwt START ***");
 
         // when

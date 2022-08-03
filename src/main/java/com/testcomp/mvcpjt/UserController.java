@@ -27,31 +27,9 @@ public class UserController {
 	
 	// 사용자 등록 API
 	@RequestMapping(value = "/signup", method = RequestMethod.POST)
-	public JSONObject signup(HttpServletRequest request, HttpServletResponse response) {
+	public JSONObject signup(HttpServletRequest request) throws Exception {
 		logger.info("signup BEGEIN");
-		JSONObject jObj = new JSONObject();
-		jObj.put("result", false);
-		jObj.put("msg", "Something went wrong");
-		Map<String,Object> jic = aUtil.readBody(request);
-		if(jic==null) {
-			jObj.put("msg", "Parameter Missing");
-		} else {
-			if((boolean)jic.get("result")) {
-				try {
-					String body = jic.get("body").toString();
-					JSONParser parser = new JSONParser();
-					JSONObject jObj2 = (JSONObject) parser.parse(body);
-					String userid = (String) jObj2.get("userid");
-					String password = (String) jObj2.get("password");
-					
-					UserDTO uDTO = new UserDTO(userid,password);
-					Map<String,Object> regMap = uUtil.regUserIfNeeded(uDTO);
-					jObj = new JSONObject(regMap);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		JSONObject jObj =  new JSONObject(uUtil.signup(request));
 		logger.info("signup Res : "+jObj);
 		return jObj;
 	}

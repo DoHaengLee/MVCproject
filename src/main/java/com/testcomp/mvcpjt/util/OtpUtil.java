@@ -10,6 +10,10 @@ import java.util.Map;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.testcomp.mvcpjt.util.db.OtpDTO;
 import com.testcomp.mvcpjt.util.db.UserDTO;
@@ -27,13 +31,14 @@ public class OtpUtil {
     private static String alg = "HmacSHA256";   // default=SHA1
     
     private static UserUtil uUtil = new UserUtil();
+    private static ApiUtil aUtil = new ApiUtil();
 
     
     //생성자
     public OtpUtil(){}
     
     //메서드
-    public String genSeed(){
+    public String genSeed() throws Exception {
         String result = "";
         try {
             String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789"; 
@@ -55,7 +60,7 @@ public class OtpUtil {
         return result;
     }
     
-    public ArrayList<String> genOtp(String seed){
+    public ArrayList<String> genOtp(String seed) throws Exception {
         ArrayList<String> result = new ArrayList<String>();
 
         long curMs = System.currentTimeMillis();
@@ -77,7 +82,7 @@ public class OtpUtil {
         return result;
     }
     
-    private String generateTOTP(String sec32, long T, int digit, String alg){
+    private String generateTOTP(String sec32, long T, int digit, String alg) throws Exception {
         String result = "";
 
         String cntr = Long.toHexString(T).toUpperCase();
@@ -110,7 +115,7 @@ public class OtpUtil {
         return result;
     }
 
-    private byte[] hexStr2Bytes(String hex){
+    private byte[] hexStr2Bytes(String hex) throws Exception {
         byte[] bArray = new BigInteger("10" + hex,16).toByteArray();    
         byte[] ret = new byte[bArray.length - 1];
         for (int i = 0; i < ret.length ; i++) {
@@ -119,7 +124,7 @@ public class OtpUtil {
         return ret;
     }
 
-    private byte[] hmac_sha(String crypto, byte[] keyBytes, byte[] text){
+    private byte[] hmac_sha(String crypto, byte[] keyBytes, byte[] text) throws Exception {
         try {
             Mac hmac;
             hmac = Mac.getInstance(crypto);
@@ -131,20 +136,15 @@ public class OtpUtil {
         }
     }
 
-    public ArrayList<String> genOtpNupdate(UserDTO uDTO){
+    public ArrayList<String> genOtpNupdate(UserDTO uDTO) throws Exception {
         String seed = genSeed();
         ArrayList<String> result = genOtp(seed);
-        try {
-            uDTO.setSeed(seed);
-            uUtil.updateUser(uDTO);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        uDTO.setSeed(seed);
+        uUtil.updateUser(uDTO);
         return result;
     }
     
-    public Map<String,Object> checkOTPnUpdate(UserDTO uDTO, String typed) {
+    public Map<String,Object> checkOTPnUpdate(UserDTO uDTO, String typed)  throws Exception {
         Map<String,Object> result = new HashMap<String,Object>();
         boolean flagCorrect = false;
         String msg = "";
@@ -198,5 +198,72 @@ public class OtpUtil {
             result.put("msg", msg);
         }
         return result;
+    }
+    
+    
+    ////////// Controller의 역할을 최대한 줄이도록 //////////
+    
+    // 발급
+    public Map<String,Object> otpgen(HttpServletRequest request) throws Exception {
+    	Map<String,Object> result = new HashMap<String,Object>();
+	    boolean resBool = false;
+		String msg = "";
+	
+		Map<String,Object> jic = aUtil.readBody(request);
+		if((boolean)jic.get("result")) {
+			String body = jic.get("body").toString();
+			UserDTO uDTO = uUtil.getUserFromStr(body);
+			if(uUtil.correctUser(uDTO)) {
+				ArrayList<String> usrOtpList = genOtpNupdate(uDTO);
+				resBool = true;
+				result.put("otp_info", usrOtpList);
+			} else {
+				msg = "Wrong PW / Unregistered User";
+			}
+		} else {
+			msg = jic.get("msg").toString();
+		}
+		
+		result.put("result", resBool);
+		if(!resBool) {
+			result.put("msg", msg);
+		}
+		return result;
+    }
+    
+    // 인증
+    public Map<String,Object> otpchk(HttpServletRequest request) throws Exception {
+    	Map<String,Object> result = new HashMap<String,Object>();
+    	boolean resBool = false;
+		String msg = "";
+
+		Map<String,Object> jic = aUtil.readBody(request);
+		if((boolean)jic.get("result")) {
+			String body = jic.get("body").toString();
+			UserDTO uDTO = uUtil.getUserFromStr(body);
+			if(uUtil.correctUser(uDTO)) {
+				
+				JSONParser parser = new JSONParser();
+				JSONObject jObj2 = (JSONObject) parser.parse(body);
+				String typed = (String) jObj2.get("otp");
+				
+				Map<String,Object> chkCorrectRes = checkOTPnUpdate(uDTO, typed);
+				resBool = (boolean) chkCorrectRes.get("result");
+				if(!resBool) {
+					msg = chkCorrectRes.get("msg").toString();
+				}
+			} else {
+				msg = "Wrong PW / Unregistered User";
+			}
+		} else {
+			msg = jic.get("msg").toString();
+		}
+		
+		result.put("result",resBool);
+		if(!resBool) {
+			result.put("msg",msg);
+		}
+
+    	return result;
     }
 }
