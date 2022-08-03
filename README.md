@@ -1,6 +1,6 @@
-# MVCproject
+# MVCproject - JWT, TOTP
 
-**Spring (MVC2) - JWT, TOTP**
+**Spring (MVC2)**
 - JDK 1.8
 - Tomcat 8.5
 - h2
