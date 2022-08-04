@@ -1,4 +1,4 @@
-# MVCproject - JWT, TOTP
+# MVCproject - JWT, TOTP / RSA, AES256
 
 **Spring (MVC2)**
 - JDK 1.8
