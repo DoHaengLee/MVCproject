@@ -44,6 +44,16 @@ public class CryptTest {
 		String reDec = rUtil.decPriv(reEnc, (PrivateKey)reKpMap.get("private"));
 		logger.info("[4] reDec : "+reDec);
 		assertEquals(decText,reDec);
+
+
+		rUtil.storeKeys(kp);
+		//rUtil.storeBase64Keys(base64Map);
+		Map<String,Object> fileKeyMap = rUtil.getByteKeyFromFile();
+		
+		String reEncFile = rUtil.encPub(plainText, (PublicKey)fileKeyMap.get("public"));
+		String reDecFile = rUtil.decPriv(reEncFile, (PrivateKey)fileKeyMap.get("private"));
+		logger.info("[5] reDecFile : "+reDecFile);
+		assertEquals(decText,reDecFile);
 	}
 	
 	@Test
