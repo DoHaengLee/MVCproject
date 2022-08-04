@@ -33,9 +33,9 @@
 </div>
 <div>
 	<h1>OTP</h1>
-	<P>1. OTP 발급</P>
+	<P>1. ID/PW로 OTP 발급</P>
 	<button type="button" onclick="location.href='otpgen_view'">발급</button>
-	<P>2. OTP 인증</P>
+	<P>2. ID/PW/OTP 인증</P>
 	<button type="button" onclick="location.href='otpchk_view'">인증</button>
 </div>
 

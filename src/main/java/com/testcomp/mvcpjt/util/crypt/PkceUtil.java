@@ -11,7 +11,7 @@ import java.util.Base64; 							//java1.8부터 가능함
 
 public class PkceUtil {
 
-    String generateCodeVerifier() throws UnsupportedEncodingException {
+    public String generateCodeVerifier() throws UnsupportedEncodingException {
         SecureRandom secureRandom = new SecureRandom();
         byte[] codeVerifier = new byte[32];
         secureRandom.nextBytes(codeVerifier);
@@ -20,7 +20,7 @@ public class PkceUtil {
         //return Base64.encodeBase64URLSafeString(codeVerifier);
     }
 
-    String generateCodeChallange(String codeVerifier) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+    public String generateCodeChallange(String codeVerifier) throws UnsupportedEncodingException, NoSuchAlgorithmException {
         byte[] bytes = codeVerifier.getBytes("US-ASCII");
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         messageDigest.update(bytes, 0, bytes.length);

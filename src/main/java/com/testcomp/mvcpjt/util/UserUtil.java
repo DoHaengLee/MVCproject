@@ -12,7 +12,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import com.testcomp.mvcpjt.util.crypt.AES256Cipher;
+import com.testcomp.mvcpjt.util.crypt.AES256util;
 
 import com.testcomp.mvcpjt.util.db.UserDAO;
 import com.testcomp.mvcpjt.util.db.UserDTO;
@@ -22,8 +22,7 @@ import com.testcomp.mvcpjt.util.db.OtpDTO;
 
 
 public class UserUtil {
-	private static String aeskey = "5616a7a50603a05c87ec82f53423fba7f50631235ea92454138d5ed987209091007a21d3d38f0b402602bc751b05e6da";
-    private static AES256Cipher aes256Cipher = new AES256Cipher(aeskey);
+    private static AES256util aes256Util = new AES256util();
     private static UserDAO uDAO = new UserDAO();
     private static OtpDAO oDAO = new OtpDAO();
     private static ApiUtil aUtil = new ApiUtil();
@@ -84,7 +83,7 @@ public class UserUtil {
 		Map<String,Object> res = uDAO.getUser(dto);
 		if(res.get("seed") != null) {
 			String encseed = res.get("seed").toString();
-			res.put("seed", aes256Cipher.AES256_Decode(encseed));
+			res.put("seed", aes256Util.decode(encseed));
 		}
 		return res;
 	}
@@ -92,7 +91,7 @@ public class UserUtil {
 	public boolean updateUser(UserDTO dto) throws Exception {
 		boolean res = false;
 		if(dto.getSeed() != null) {
-			String encseed = aes256Cipher.AES256_Encode(dto.getSeed());
+			String encseed = aes256Util.encode(dto.getSeed());
 			dto.setSeed(encseed);
 		}
 		res = uDAO.updateUser(dto);
@@ -118,7 +117,7 @@ public class UserUtil {
 	public boolean updateOtpgen(UserDTO uDTO) throws Exception {
 		boolean res = false;
 		if(uDTO.getSeed() != null) {
-			String encseed = aes256Cipher.AES256_Encode(uDTO.getSeed());
+			String encseed = aes256Util.encode(uDTO.getSeed());
 			uDTO.setSeed(encseed);
 		}
 		res = uDAO.updateUser(uDTO);
