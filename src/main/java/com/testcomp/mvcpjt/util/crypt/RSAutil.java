@@ -23,10 +23,9 @@ import com.testcomp.mvcpjt.util.FileUtil;
 public class RSAutil {
 	
 	// pub.getFormat() 등으로 확인해보면 public은 PKCS8, private는 X509
-	private static String keypath = "C:/Users/Public/Documents/MVCpjt/";
 	private static String keyname = "testkey";
-	private static String privfile = keypath+keyname+"_private.key";
-	private static String pubfile = keypath+keyname+"_public.key";
+	private static String privfile = keyname+"_private.key";
+	private static String pubfile = keyname+"_public.key";
 	private static String alg = "RSA";
 	private static FileUtil fUtil = new FileUtil();
 	
@@ -101,7 +100,7 @@ public class RSAutil {
     ////////// 파일 쓰기/읽기 //////////
     // 저장
  	public void storeKeys (KeyPair kp) throws Exception {
- 		Key pub = kp.getPublic();
+		Key pub = kp.getPublic();
  		Key priv = kp.getPrivate();
  		
  		FileOutputStream out;
@@ -114,7 +113,7 @@ public class RSAutil {
 		fUtil.createFile(pubfile);
 		out = new FileOutputStream(pubfile);
 		out.write(pub.getEncoded());
-		out.close();
+		out.close();	
  	}
  	// 파일 읽고 키 획득
  	public Map<String,Object> getByteKeyFromFile() throws Exception {

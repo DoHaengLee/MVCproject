@@ -47,7 +47,6 @@ public class CryptTest {
 
 
 		rUtil.storeKeys(kp);
-		//rUtil.storeBase64Keys(base64Map);
 		Map<String,Object> fileKeyMap = rUtil.getByteKeyFromFile();
 		
 		String reEncFile = rUtil.encPub(plainText, (PublicKey)fileKeyMap.get("public"));
