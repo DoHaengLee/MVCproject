@@ -2,14 +2,11 @@ package com.testcomp.mvcpjt.util;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 import java.sql.Timestamp;
 import java.util.Date;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 
@@ -27,11 +24,11 @@ public class JwtTest {
 	private static UserDTO dto = new UserDTO(uid, pwd);
 	private static UserUtil uUtil = new UserUtil();
 	// 전체토큰 - 2초만 유효 액세스토큰 - 15초만 유효, 리프레시토큰 - 30초만 유효
-	private static long tokenValidMilisecond = 1000L * 2;
+	private static long wholeValidMilisecond = 1000L * 2;
 	private static long accessValidMilisecond = 1000L * 15;
 	private static long refreshValidMilisecond = 1000L * 30;
     // 객체 생성 w/ 초기화
-	private static JwtUtil jUtil = new JwtUtil(tokenValidMilisecond,accessValidMilisecond,refreshValidMilisecond);
+	private static JwtUtil jUtil = new JwtUtil(wholeValidMilisecond,accessValidMilisecond,refreshValidMilisecond);
 
 	
 	@Test
@@ -39,6 +36,14 @@ public class JwtTest {
 		logger.info("*** testJwt START ***");
 
         // when
+		// 사용자 등록 (토큰 검증 시 사용자가 등록되어있는지도 확인 함)
+		Map<String,Object> regMap = uUtil.regUserIfNeeded(dto);
+		if(!(boolean)regMap.get("result")) {
+			assertEquals("Already Registered", (String)regMap.get("msg"));
+		} else {
+			assertEquals(true, (boolean)regMap.get("result"));
+		}
+		
         // 신규 생성 시나리오 테스트 - DB update 전까지는 validateTokenSub로 검증
         // whole_token 생성
         String whole_token = jUtil.createWholeToken(dto);
@@ -160,7 +165,6 @@ public class JwtTest {
                 }
             }
         }
-        logger.info("");
 	}
 
 }

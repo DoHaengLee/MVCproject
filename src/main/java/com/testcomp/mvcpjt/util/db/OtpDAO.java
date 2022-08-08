@@ -1,9 +1,5 @@
 package com.testcomp.mvcpjt.util.db;
 
-import java.sql.DriverManager;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,20 +8,22 @@ import java.util.Map;
 
 
 public class OtpDAO {
-	// 변수
+	/* 변수 */
 	private static ConnDAO cDAO = new ConnDAO();
 	
-    // 생성자
-    public OtpDAO(){}
+	/* 생성자 */
+    public OtpDAO(){
+    	createOtptblTable();
+    }
     
-
-    // 테이블 생성 - static인데도 바로 생성이 안 되네...usedOtp 쪽에 넣기로
+    /* 함수 */
+    // OTPTBL 테이블 생성 - OTP 재사용 방지 용도
     private static void createOtptblTable() {
     	String sql = "CREATE TABLE IF NOT EXISTS otptbl(id VARCHAR(100) NOT NULL, numgen INT NOT NULL, otp VARCHAR(100) NOT NULL, usedyn BOOLEAN NOT NULL);";
         try {
         	cDAO.getConn();
         	ConnDAO.pstmt = ConnDAO.conn.prepareStatement(sql);
-            int succ = ConnDAO.pstmt.executeUpdate();
+        	ConnDAO.pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -33,26 +31,22 @@ public class OtpDAO {
         }
     }
     
-    // OTPtbl 삭제
-    //public boolean deleteOtptbl(OtpDTO dto) {
+    // OTPTBL 내 해당 사용자 정보 삭제
     public void deleteOtptbl(OtpDTO dto) {
-        boolean res = false;
         String sql = "DELETE FROM otptbl WHERE id=?";
         try {
             cDAO.getConn();
             ConnDAO.pstmt = ConnDAO.conn.prepareStatement(sql);
             ConnDAO.pstmt.setString(1, dto.getId());
-            int succ = ConnDAO.pstmt.executeUpdate();
-            //if(succ==1) res = true;
+            ConnDAO.pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
         	cDAO.closeConn();
         }
-        //return res;
     }
     
-    // OTPtbl 등록
+    // OTPTBL 등록
     public boolean insertOtptbl(OtpDTO dto) {
         boolean res = false;
         String sql = "INSERT INTO otptbl VALUES (?,?,?,?)";
@@ -73,7 +67,7 @@ public class OtpDAO {
         return res;
     }
 
-    // OTPtbl 정보 조회
+    // OTPTBL 조회 - 전체
     public List<Map<String,Object>> getOtptbl(OtpDTO dto) {
     	List<Map<String,Object>> res = new ArrayList<Map<String,Object>>();
     	
@@ -104,12 +98,11 @@ public class OtpDAO {
         return res;
     }
     
-    // OTPtbl 정보 조회 - 해당 OTP를 사용했는지
+    // OTPTBL 조회 - 해당 OTP를 사용했는지
     public boolean usedOtp(OtpDTO dto) {
     	boolean res = false;
         String sql = "SELECT usedyn FROM otptbl WHERE id=? AND otp=?";
         try {
-        	createOtptblTable();
             cDAO.getConn();
             ConnDAO.pstmt = ConnDAO.conn.prepareStatement(sql);
             ConnDAO.pstmt.setString(1, dto.getId());

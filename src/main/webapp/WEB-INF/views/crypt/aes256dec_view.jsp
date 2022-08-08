@@ -12,33 +12,23 @@
     <script src="./resources/js/jquery-3.5.1.min.js"></script>
     <script src="./resources/js/common.js"></script>
     
-    <title>[MVCpjt] 리프레시토큰으로 토큰 재획득</title>
+    <title>[MVCpjt] AES256 복호화</title>
 </head>
 
-<!-- <style>
-div
-{
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;  
-    box-sizing: border-box; 
-} 
-</style> -->
-
 <body>
-<P>RefreshToken을 입력하여 토큰을 재발급 받으세요.</P>
-<P>재발급 할 경우, 이전에 받은 토큰은 더이상 사용이 불가합니다.</P>
+<P>복호화 할 문자를 입력하세요.</P>
 
 <ul>
     <li>
-        RefreshToken <input id="ref" name="ref" type="text" placeholder="eyJ0eXAi..." onkeypress="if(event.keyCode==13){chkWritten();}">
+        AES256으로 암호화 된 문자 <input id="enctext" name="enctext" type="text" placeholder="AES256 enc string" onkeypress="if(event.keyCode==13){chkWritten();}">
     </li>
 </ul>
-<button type="button" onclick="javascript:chkWritten()">재발급</button>
+<button type="button" onclick="javascript:chkWritten()">복호화</button>
 <div>
-	<p id="resHere" style="white-space:normal"></p>
+	<p id="resHere"></p>
 </div>
 <button type="button" onclick="location.href='/'">메인으로</button>
-<button type="button" onclick="location.href='tokentest_view'">토큰 테스트</button>
+<button type="button" onclick="location.href='aes256enc_view'">암호화</button>
 
 </body>
 </html>
@@ -47,25 +37,28 @@ div
 
 <script>
 function chkWritten() {
-    var ref = document.getElementById("ref").value;
+    var enctext = document.getElementById("enctext").value;
 
-    if(ref == null || ref == "") {
-        document.getElementById("ref").focus();
-        document.getElementById("resHere").innerText = "Refresh Token을 입력해주세요";
+    if(enctext == null || enctext == "") {
+        document.getElementById("enctext").focus();
+        document.getElementById("resHere").innerText = "복호화 할 문자를 입력해주세요";
     } else {
+    	let obj={
+    	   		"enctext" : enctext
+    	   	};
         $.ajax({
             type : "POST",
-            url : "tokenref",
-            headers: {
-                "Authorization": "Bearer "+ref,
-            },
+            url : "aes256dec",
+            contentType: 'application/json; charset=utf-8',
+            data : JSON.stringify(obj),
             dataType: "json",
             cache : false,
             async: false,
             success : function(data) {
                 var res = data.result;
+                console.log("res : "+res);
                 if(res){
-                	document.getElementById("resHere").innerText = JSON.stringify(data.token_info);
+                	document.getElementById("resHere").innerText = data.dec;
                 } else {
                 	document.getElementById("resHere").innerText = data.msg;
                 }

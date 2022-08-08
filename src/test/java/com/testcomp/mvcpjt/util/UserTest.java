@@ -35,8 +35,6 @@ public class UserTest {
 		regdone = (boolean) regdoneObj.get("result");
 		logger.info("[2] regdone (Must be false) : "+regdone);
 		assertEquals(false,regdone);
-
-		logger.info("");
 	}
 	
 	@Test
@@ -54,8 +52,6 @@ public class UserTest {
 		// then - true
         logger.info("[2] ID/PW (Must be true) : "+uUtil.correctUser(dto));
         assertEquals(true,uUtil.correctUser(dto));
-        
-        logger.info("");
 	}
 	
 }

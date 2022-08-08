@@ -16,6 +16,7 @@
     
     <title>[MVCpjt] HOME</title>
 </head>
+
 <body>
 <div>
 	<h1>사용자</h1>
@@ -38,6 +39,13 @@
 	<P>2. ID/PW/OTP 인증</P>
 	<button type="button" onclick="location.href='otpchk_view'">인증</button>
 </div>
-
+<div>
+	<h1>CRYPT</h1>
+	<P>1. AES256으로 암호화</P>
+	<button type="button" onclick="location.href='aes256enc_view'">암호화</button>
+	<P>2. AES256으로 복호화</P>
+	<button type="button" onclick="location.href='aes256dec_view'">복호화</button>
+</div>
 </body>
+
 </html>

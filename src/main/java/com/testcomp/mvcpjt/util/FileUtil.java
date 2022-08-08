@@ -8,26 +8,21 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-
-import io.jsonwebtoken.lang.Arrays;
 
 
 
 public class FileUtil {
 	
-	public static String filepath = "C:/Users/Public/Documents/MVCpjt/";
+	public static String filepath = ConfigUtil.FILEpath;
 	public static LocalDateTime now = LocalDateTime.now();     // Java 8부터 가능
 	
 	/*
+	// 여러 개 업로드 - 테스트중
 	public void uploadFile(MultipartHttpServletRequest mhsr) throws Exception {
 		List<MultipartFile> mf = mhsr.getFiles("uploadFile");
 		if (mf.size() == 1 && mf.get(0).getOriginalFilename().equals("")) {
@@ -55,54 +50,72 @@ public class FileUtil {
 		}
 	}
 	*/
-	public boolean uploadFile(MultipartFile thefile) throws Exception {
+	// 파일 업로드 - 테스트중
+	public boolean uploadFile(MultipartFile thefile) {
 		boolean result = false;
-        try{
+        try {
             File folder = new File(filepath);
             if (!folder.isDirectory()) folder.mkdirs();
             File destination = new File(filepath + thefile.getOriginalFilename());
             thefile.transferTo(destination);
             result = true;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            return result;
         }
+        return result;
     }
 	
 	// 폴더 및 파일 생성
-	public void createFile(String filename) throws Exception {
-        File folder = new File(filepath);
-        if (!folder.isDirectory()) {
-        	folder.mkdirs();
-        }
-		File file = new File(filepath+filename);
-		if(!file.exists()) {
-			file.createNewFile();
+	public void createFile(String filename, byte[] content) {
+		try {
+	        File folder = new File(filepath);
+	        if (!folder.isDirectory()) {
+	        	folder.mkdirs();
+	        }
+			File file = new File(filepath+filename);
+			if(!file.exists()) {
+				file.createNewFile();
+			}
+			if(content != null) {
+				FileOutputStream out = new FileOutputStream(filepath+filename);
+				out.write(content);
+				out.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
 	// String 파일 읽기
- 	public String readFile(String filename) throws Exception {
- 		BufferedReader reader = new BufferedReader(new FileReader(filename));
- 		String readLine = "";
- 		String str;
- 		while ((str = reader.readLine()) != null) {
- 			readLine+=str;
+ 	public String readFile(String filename) {
+ 		String result = "";
+ 		try {
+ 	 		BufferedReader reader = new BufferedReader(new FileReader(filename));
+ 	 		String str;
+ 	 		while ((str = reader.readLine()) != null) {
+ 	 			result+=str;
+ 	 		}
+ 	 		reader.close();
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
  		}
- 		reader.close();
- 		return readLine;
+ 		return result;
  	}
  	
  	// byte 파일 읽기
- 	public byte[] readByteFile(String filename) throws Exception {
- 		byte[] result;
- 		File file = new File(filepath+filename);
- 		return Files.readAllBytes(file.toPath());
+ 	public byte[] readByteFile(String filename) {
+ 		byte[] result = null;
+ 		try {
+ 			File file = new File(filepath+filename);
+ 	 		result =  Files.readAllBytes(file.toPath());
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
+ 		}
+ 		return result;
  	}
  	
  	// csv 파일 읽기
- 	public List<List<String>> readCSV(String filename) throws Exception {
+ 	public List<List<String>> readCSV(String filename) {
  		List<List<String>> result = new ArrayList<List<String>>();
  		try {
  			File csv = new File(filepath+filename);
@@ -132,26 +145,30 @@ public class FileUtil {
         return result;
     }
  	// csv 파일 쓰기
- 	public void writeCSV(String filename, List<List<String>> dataList) throws Exception {
-        File csv = new File(filepath+filename);
-        createFile(filename);
-        BufferedWriter bw = null;
-        bw = new BufferedWriter(new FileWriter(csv));
-        
-        for(List<String> ls : dataList) {
-			for(String s : ls) {
-				bw.write(s);
-				if(!s.equals(ls.get(ls.size()-1))) {
-					bw.write(",");
-				}
-			}
-			if(!ls.equals(dataList.get(dataList.size()-1))) {
-				bw.newLine();
-			}
-		}
-        if (bw != null) {
-            bw.flush();
-            bw.close();
-        }
+ 	public void writeCSV(String filename, List<List<String>> dataList) {
+ 		try {
+ 	        File csv = new File(filepath+filename);
+ 	        createFile(filename, null);
+ 	        BufferedWriter bw = null;
+ 	        bw = new BufferedWriter(new FileWriter(csv));
+ 	        
+ 	        for(List<String> ls : dataList) {
+ 				for(String s : ls) {
+ 					bw.write(s);
+ 					if(!s.equals(ls.get(ls.size()-1))) {
+ 						bw.write(",");
+ 					}
+ 				}
+ 				if(!ls.equals(dataList.get(dataList.size()-1))) {
+ 					bw.newLine();
+ 				}
+ 			}
+ 	        if (bw != null) {
+ 	            bw.flush();
+ 	            bw.close();
+ 	        }
+ 		} catch (Exception e) {
+ 			e.printStackTrace();
+ 		}
     }
 }

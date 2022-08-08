@@ -2,14 +2,13 @@ package com.testcomp.mvcpjt.util.db;
 
 
 public class OtpDTO {
-
-	//변수
+	/* 변수 */
     private String id;
     private int num;
     private String otp;
     private boolean usedyn;
     
-    //생성자
+    /* 생성자 */
     public OtpDTO(){}
     public OtpDTO(String id) {
         this.id = id;
@@ -19,7 +18,7 @@ public class OtpDTO {
         this.otp = otp;
     }
     
-    //getter
+    /* getter */
     public String getId() {
         return id;
     }
@@ -33,7 +32,7 @@ public class OtpDTO {
         return usedyn;
     }
     
-    //setter
+    /* setter */
     public void setId(String id) {
         this.id = id;
     }

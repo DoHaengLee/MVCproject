@@ -3,47 +3,42 @@ package com.testcomp.mvcpjt.util;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
-import javax.servlet.http.HttpServletRequest;
-
 import java.util.HashMap;
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.sql.Timestamp;
-
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.security.Key;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import java.nio.charset.StandardCharsets;
+import javax.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
 
-import com.testcomp.mvcpjt.JwtController;
 import com.testcomp.mvcpjt.util.db.UserDTO;
+
 
 
 public class JwtUtil {
     
     /* 변수 */
-	private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
-	private static String key = "jkjkjkjosldfknvxpdfbdafjgioapsdgnw0frfw23r23nkj23r10104321904u104oinwefwef";
-	private static String issuer = "Jess";
-	private static String headerType = "JWT";
-	private static String headerAlg = "HS256";
 	private static UserUtil uUtil = new UserUtil();
 	private static ApiUtil aUtil = new ApiUtil();
-
-    // 전체 토큰 만료 - 1시간, 액세스 토큰 만료 30분, 리프레시 토큰 만료 8시간  
-    private long tokenValidMilisecond = 1000L * 60 * 60;
-    private long accessValidMilisecond = 1000L * 60 * 30;
-    private long refreshValidMilisecond = 1000L * 60 * 60 * 8;
-    
-    
+    /*
+	// 생성되기 전에 호출해서 null 되는 것으로 보임 > root-context 대신 mvc.properties > ConfigProp > ConfigUtil 사용
+	@Value("#{property['jwt.key']}")
+	private static String key;
+    */
+    private static String key = ConfigUtil.JWTkey;
+	private static String issuer = ConfigUtil.JWTissuer;
+	private static String headerType = ConfigUtil.JWTtype;
+	private static String headerAlg = ConfigUtil.JWTalg;
+	// 전체 토큰 만료 - 1시간, 액세스 토큰 만료 30분, 리프레시 토큰 만료 8시간
+	private long tokenValidMilisecond = ConfigUtil.JWTexp;
+    private long accessValidMilisecond = ConfigUtil.JWTacc;
+    private long refreshValidMilisecond = ConfigUtil.JWTref;
     
     /* 생성자 */
     // 기본
@@ -55,19 +50,20 @@ public class JwtUtil {
     	this.refreshValidMilisecond = refreshValidMilisecond;
     }
     
-    
-    
     /* 함수 */
-    
-    //String 키값을 Key로
+  	////////// 생성 //////////
+    // String 키값을 Key로
   	private Key getSigninKey(String secretKey)  throws Exception {
   		byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
   		return Keys.hmacShaKeyFor(keyBytes);
   	}
-  	
-  	////////// 생성 //////////
+  	// 랜덤 alphanumeric 생성
+   	private static String generateString()  throws Exception {
+         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+         return uuid;
+     }
     // 토큰 생성
-    public String createToken(String userid, String sub, Map<String, Object> payload)  throws Exception {
+    private String createToken(String userid, String sub, Map<String, Object> payload)  throws Exception {
         // Header 설정
         Map<String, Object> headers = new HashMap<>();
         headers.put("typ", headerType);
@@ -102,63 +98,67 @@ public class JwtUtil {
                 .signWith(getSigninKey(key)) // Signatue 부분 설정    *signWith(SignatureAlgorithm.HS256, SECRET_KEY)는 deprecated 됨
                 .compact();                  // 토큰 생성
     }
-    
-  	// 랜덤 alphanumeric 생성
-  	public static String generateString()  throws Exception {
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        return uuid;
-    }
-    
   	// 용도에 맞는 토큰 생성
-    public String createEach(String userid, String sub)  throws Exception {
+    private String createEach(String userid, String sub)  throws Exception {
     	String token = generateString();
-    	
     	// Payload 설정
     	Map<String, Object> payload = new HashMap<>();
     	payload.put(sub, token);
-        
     	return createToken(userid, sub, payload);
     }
     
     // 전체 토큰 생성 (whole_token도 json화)
-    public String createWholeToken(UserDTO uDTO)  throws Exception {
-    	String access_token = createEach(uDTO.getId(), "access_token");
-    	String refresh_token = createEach(uDTO.getId(), "refresh_token");
-    	
-    	// Payload 설정
-    	Map<String, Object> payload = new HashMap<>();
-    	payload.put("access_token", access_token);
-    	payload.put("refresh_token", refresh_token);
-        
-    	return createToken(uDTO.getId(), "whole_token", payload);
+    public String createWholeToken(UserDTO uDTO) {
+    	String result = "";
+    	try {
+    		String access_token = createEach(uDTO.getId(), "access_token");
+        	String refresh_token = createEach(uDTO.getId(), "refresh_token");
+        	if(access_token!=null && !access_token.equals("") && refresh_token!=null && !refresh_token.equals("")) {
+            	// Payload 설정
+            	Map<String, Object> payload = new HashMap<>();
+            	payload.put("access_token", access_token);
+            	payload.put("refresh_token", refresh_token);
+            	result = createToken(uDTO.getId(), "whole_token", payload);
+        	}
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	return result;
     }
     
     // 전체 토큰 생성 (whole_token도 json화) 후 DB 업데이트까지
-    public Map<String,Object> createNupdate(UserDTO uDTO)  throws Exception {
+    public Map<String,Object> createNupdate(UserDTO uDTO) {
     	Map<String,Object> resMap = new HashMap<String,Object>();
     	boolean result = false;
-    	
     	String whole_token = createWholeToken(uDTO);
-    	Jws<Claims> wholeClaim = getClaims(whole_token);
-    	Map<String,Object> wholeMap = getEach(wholeClaim);
-    	Date accExp = (Date) wholeMap.get("accexp");
-    	Timestamp accExpTs = new Timestamp(accExp.getTime());
-    	uDTO.setAccexp(accExpTs);
-        Date refExp = (Date) wholeMap.get("refexp");
-        Timestamp refExpTs = new Timestamp(refExp.getTime());
-        uDTO.setRefexp(refExpTs);
-        boolean updone2 = uUtil.updateUser(uDTO);
-        if(updone2) {
-        	result = true;
-        	resMap.put("whole_token",whole_token);
-        }
-
+    	if(whole_token!=null && !whole_token.equals("")) {
+    		Map<String,Object> wholeMap = new HashMap<String,Object>();
+    		try {
+    	    	Jws<Claims> wholeClaim = getClaims(whole_token);
+    	    	wholeMap = getEach(wholeClaim);
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    		}
+    		if(!wholeMap.isEmpty()) {
+    	    	Date accExp = (Date) wholeMap.get("accexp");
+    	    	Timestamp accExpTs = new Timestamp(accExp.getTime());
+    	    	uDTO.setAccexp(accExpTs);
+    	        Date refExp = (Date) wholeMap.get("refexp");
+    	        Timestamp refExpTs = new Timestamp(refExp.getTime());
+    	        uDTO.setRefexp(refExpTs);
+    	        boolean updone2 = uUtil.updateUser(uDTO);
+    	        if(updone2) {
+    	        	result = true;
+    	        	resMap.put("whole_token",whole_token);
+    	        }
+    		}
+    	}
         resMap.put("result", result);
     	return resMap;
     }
     
     // 전체 토큰 생성
-    public Map<String,String> createWOwhole(UserDTO uDTO)  throws Exception {
+    private Map<String,String> createWOwhole(UserDTO uDTO) throws Exception {
     	Map<String, String> tkMap = new HashMap<String,String>();
     	tkMap.put("access_token", createEach(uDTO.getId(), "access_token"));
     	tkMap.put("refresh_token", createEach(uDTO.getId(), "refresh_token"));
@@ -166,54 +166,64 @@ public class JwtUtil {
     }
     
     // 전체 토큰 생성 후 DB 업데이트까지
-    public Map<String,Object> createWOwholeNupdate(UserDTO uDTO)  throws Exception {
+    public Map<String,Object> createWOwholeNupdate(UserDTO uDTO) {
     	Map<String,Object> resMap = new HashMap<String,Object>();
     	boolean result = false;
-    	
-    	Map<String,String> whole_token = createWOwhole(uDTO);
-    	Jws<Claims> accClaim = getClaims(whole_token.get("access_token").toString());
-    	Map<String,Object> accMap = getEach(accClaim);
-    	Date accExp = (Date) accMap.get("expiration");
-    	Jws<Claims> refClaim = getClaims(whole_token.get("refresh_token").toString());
-    	Map<String,Object> refMap = getEach(refClaim);
-    	Date refExp = (Date) refMap.get("expiration");
-    	
-    	Timestamp accExpTs = new Timestamp(accExp.getTime());
-        Timestamp refExpTs = new Timestamp(refExp.getTime());
-        uDTO.setAccexp(accExpTs);
-        uDTO.setRefexp(refExpTs);
-        boolean updone2 = uUtil.updateUser(uDTO);
-        if(updone2) {
-        	result = true;
-        	resMap.put("whole_token",whole_token);
-        }
-
+    	Map<String,String> whole_token = new HashMap<String,String>();
+    	Map<String,Object> accMap = new HashMap<String,Object>();
+    	Map<String,Object> refMap = new HashMap<String,Object>();
+    	try {
+    		whole_token = createWOwhole(uDTO);
+        	Jws<Claims> accClaim = getClaims(whole_token.get("access_token").toString());
+        	accMap = getEach(accClaim);
+        	Jws<Claims> refClaim = getClaims(whole_token.get("refresh_token").toString());
+        	refMap = getEach(refClaim);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	if(!accMap.isEmpty() && !refMap.isEmpty()) {
+    		Date accExp = (Date) accMap.get("expiration");
+        	Date refExp = (Date) refMap.get("expiration");
+        	Timestamp accExpTs = new Timestamp(accExp.getTime());
+            Timestamp refExpTs = new Timestamp(refExp.getTime());
+            uDTO.setAccexp(accExpTs);
+            uDTO.setRefexp(refExpTs);
+            boolean updone2 = uUtil.updateUser(uDTO);
+            if(updone2) {
+            	result = true;
+            	resMap.put("whole_token",whole_token);
+            }
+    	}
         resMap.put("result", result);
     	return resMap;
     }
-    
-    
-    
 
     ////////// 검증 //////////
     // 토큰 검증
-    public boolean validateToken(String jwtToken)  throws Exception {
+    public boolean validateToken(String jwtToken) {
         boolean res = false;
+        Key theKey = null;
         try {
-            Jwts.parserBuilder()
-                .setSigningKey(getSigninKey(key))
-                .build()
-                .parseClaimsJws(jwtToken);
-            //System.out.println("Trust the JWT");
-            res = true;
-        } catch (JwtException e) {
-            //System.out.println("Don't trust the JWT!");
+        	theKey = getSigninKey(key);
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
+        if(theKey!=null) {
+            try {
+                Jwts.parserBuilder()
+                    .setSigningKey(theKey)
+                    .build()
+                    .parseClaimsJws(jwtToken);
+                //System.out.println("Trust the JWT");
+                res = true;
+            } catch (JwtException e) {
+                //System.out.println("Don't trust the JWT!");
+            }
         }
         return res;
     }
-
     // 토큰 복호화 - 방법1
-    public Map<String,String> getHeaderBody(String jwt) throws Exception {
+    public Map<String,String> getHeaderBody(String jwt) {
         Map<String,String> res = new HashMap<>();
         
         String[] chunks  = jwt.split("\\.");
@@ -230,25 +240,27 @@ public class JwtUtil {
 
         return res;
     }
-
     // 토큰 복호화 - 방법2
-    public Jws<Claims> getClaims(String jwt)  throws Exception {
+    public Jws<Claims> getClaims(String jwt) {
+    	Jws<Claims> result = null;
+    	Key theKey = null;
         try {
-	        // secretkey로 암호화 했으면 secretkey로 복호화
-	        // privatekey로 암호화 했으면 publickey로 복호화
-	        return Jwts.parserBuilder()
-	                .setSigningKey(getSigninKey(key))
-	                .build()
-	                .parseClaimsJws(jwt);
-        } catch(Exception e) {
-        	System.out.println("getClaims Catch");
+        	theKey = getSigninKey(key);
+        } catch (Exception e) {
         	e.printStackTrace();
-            return null;
         }
+        if(theKey!=null) {
+            // secretkey로 암호화 했으면 secretkey로 복호화
+            // privatekey로 암호화 했으면 publickey로 복호화
+        	result = Jwts.parserBuilder()
+                    .setSigningKey(theKey)
+                    .build()
+                    .parseClaimsJws(jwt);
+        }
+        return result;
     }
-    
     // 용도에 맞는 토큰 파싱
-    public Map<String,Object> getEach(Jws<Claims> claims)  throws Exception {
+    public Map<String,Object> getEach(Jws<Claims> claims) {
         Map<String,Object> res = new HashMap<>();
         res.put("issuer", claims.getBody().getIssuer());
         res.put("issuedAt", claims.getBody().getIssuedAt());
@@ -276,9 +288,8 @@ public class JwtUtil {
         }
         return res;
     }
-
     // 발급자, 사용자 포함 토큰 검증
-    public boolean validateTokenSub(String jwt, UserDTO uDTO)  throws Exception {
+    public boolean validateTokenSub(String jwt, UserDTO uDTO) {
         boolean res = false;
         if(validateToken(jwt)) {
         	Jws<Claims> jws = getClaims(jwt);
@@ -297,9 +308,8 @@ public class JwtUtil {
         }
         return res;
     }
-    
     // 발급자, 사용자, 용도, 만료일(재발급 전 토근인지) 포함 토큰 검증
-    public boolean validateTokenExp(String jwt, UserDTO uDTO) throws Exception {
+    public boolean validateTokenExp(String jwt, UserDTO uDTO) {
         boolean res = false;
 
         res = validateTokenSub(jwt, uDTO);
@@ -347,12 +357,9 @@ public class JwtUtil {
         return res;
     }
     
-    
-    
-	//////////Controller의 역할을 최대한 줄이도록 //////////
-	    
-	// 발급
-	public Map<String,Object> tokenpw(HttpServletRequest request) throws Exception {
+	//////////Controller 역할 축소 //////////    
+	// ID/PW 확인 후 JWT 발급
+	public Map<String,Object> tokenpw(HttpServletRequest request) {
 		Map<String,Object> resMap = new HashMap<String,Object>();
 		
 	    boolean result = false;
@@ -384,9 +391,8 @@ public class JwtUtil {
 		}
 		return resMap;
 	}
-	
-	// 재발급
-	public Map<String,Object> tokenref(HttpServletRequest request) throws Exception {
+	// Refresh Token 확인 후 재발급
+	public Map<String,Object> tokenref(HttpServletRequest request) {
 		Map<String,Object> resMap = new HashMap<String,Object>();
 		boolean result = false;
 		String msg = "";
@@ -414,9 +420,8 @@ public class JwtUtil {
 		}
 		return resMap;
 	}
-    
-	// 테스트
-	public Map<String,Object> testapi(HttpServletRequest request) throws Exception {
+	// Access Token 확인 후 응답
+	public Map<String,Object> testapi(HttpServletRequest request) {
 		Map<String,Object> resMap = new HashMap<String,Object>();
 		boolean result = false;
 		String msg = "";

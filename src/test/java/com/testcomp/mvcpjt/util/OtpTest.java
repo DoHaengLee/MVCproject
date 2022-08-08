@@ -1,15 +1,15 @@
 package com.testcomp.mvcpjt.util;
 
 import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.Map;
-
 import org.junit.Test;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.testcomp.mvcpjt.util.db.UserDTO;
+
+
 
 public class OtpTest {
 
@@ -19,14 +19,25 @@ public class OtpTest {
 	private static String pwd = "password1";
 	private static UserDTO dto = new UserDTO(uid, pwd);
 	private static OtpUtil oUtil = new OtpUtil();
-
+	private static UserUtil uUtil = new UserUtil();
+	
 	
 	@Test
-	public void testOtp() throws Exception {
+	public void testOtp() {
 		logger.info("*** testOtp START ***");
+
+		// when
+		// 사용자 등록 (otp seed를 저장해둠)
+		Map<String,Object> regMap = uUtil.regUserIfNeeded(dto);
+		if(!(boolean)regMap.get("result")) {
+			assertEquals("Already Registered", (String)regMap.get("msg"));
+		} else {
+			assertEquals(true, (boolean)regMap.get("result"));
+		}
+		logger.info("[0] REG DONE");
 		
 		// OTP 발급
-		ArrayList<String> usrOtpList = oUtil.genOtpNupdate(dto);
+		List<String> usrOtpList = oUtil.genOtpNupdate(dto);
 		logger.info("usrOtpList : "+usrOtpList);
 		
 		// when - 틀린 OTP 인증 (false)
@@ -47,8 +58,9 @@ public class OtpTest {
 		// when - 동일 OTP 인증 (false)
 		for (String typed : usrOtpList) {
             Map<String,Object> chkCorrectResAgain = oUtil.checkOTPnUpdate(dto, typed);
-            logger.info("[3] chkCorrectResAgain (Must be true) : "+chkCorrectResAgain.get("result"));
+            logger.info("[3] chkCorrectResAgain (Must be false) : "+chkCorrectResAgain.get("result"));
     		assertEquals(false,chkCorrectResAgain.get("result"));
         }
+
 	}
 }

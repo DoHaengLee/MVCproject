@@ -1,34 +1,27 @@
 package com.testcomp.mvcpjt.util.db;
 
-import java.sql.DriverManager;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
 
 
-
-
 public class UserDAO {
-	// 변수
-		private static ConnDAO cDAO = new ConnDAO();
+	/* 변수 */
+	private static ConnDAO cDAO = new ConnDAO();
 
-    // 생성자
-    public UserDAO(){}
+    /* 생성자 */
+    public UserDAO(){
+    	createTblUsers();
+    }
     
-
-    // 테이블 생성 - static인데도 바로 생성이 안 되네...getUser 쪽에 넣기로
+    /* 함수 */
+    // USERS 테이블 생성 - 사용자 정보 관리 용도
     private static void createTblUsers() {
     	String sql = "CREATE TABLE IF NOT EXISTS users(id VARCHAR(100) NOT NULL PRIMARY KEY, pw VARCHAR(500) NOT NULL, refexp TIMESTAMP, accexp TIMESTAMP, seed VARCHAR(500));";
         try {
             cDAO.getConn();
             ConnDAO.pstmt = ConnDAO.conn.prepareStatement(sql);
-            int succ = ConnDAO.pstmt.executeUpdate();
-            //if(succ==1) System.out.println("CREATE DONE");
-            //else System.out.println("TABLE EXISTS");
+            ConnDAO.pstmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -36,7 +29,7 @@ public class UserDAO {
         }
     }
     
-    // 사용자 등록
+    // USERS 등록
     public boolean insertUser(UserDTO dto) {
         boolean res = false;
         String sql = "INSERT INTO users VALUES(?,?,?,?,?)";
@@ -58,12 +51,11 @@ public class UserDAO {
         return res;
     }
 
-    // 사용자 정보 조회
+    // USERS 조회 - 전체
     public Map<String,Object> getUser(UserDTO dto) {
         Map<String,Object> res = new HashMap<>();
         String sql = "SELECT pw, refexp, accexp, seed FROM users WHERE id=?";
         try {
-        	createTblUsers();
             cDAO.getConn();
             ConnDAO.pstmt = ConnDAO.conn.prepareStatement(sql);
             ConnDAO.pstmt.setString(1, dto.getId());
@@ -90,7 +82,7 @@ public class UserDAO {
         return res;
     }
     
-    // 사용자 업데이트 - 토큰(refresh + access) / OTP시드
+    // USERS 업데이트 - 토큰(refresh + access) and/or OTP시드
     public boolean updateUser(UserDTO dto) {
         boolean res = false;
         

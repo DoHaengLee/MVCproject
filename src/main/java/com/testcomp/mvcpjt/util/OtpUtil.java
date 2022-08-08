@@ -1,67 +1,57 @@
 package com.testcomp.mvcpjt.util;
 
-import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigInteger;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
-
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.testcomp.mvcpjt.util.db.OtpDTO;
 import com.testcomp.mvcpjt.util.db.UserDTO;
-import com.testcomp.mvcpjt.util.UserUtil;
 
 
 
 public class OtpUtil {
-	
-	//변수
-	private static int setMin = 1;              // 앞뒤로 몇 분씩 허용할 건지 (1 : 이전-현재-다음)
-    private static long T0 = 0;                 // default=0   ->  T를 unix 시간으로 구했으니 이대로 0
-    private static long X = 60;                 // default=30
-    private static int digit = 8;               // default=6
-    private static String alg = "HmacSHA256";   // default=SHA1
-    
-    private static UserUtil uUtil = new UserUtil();
+	/* 변수 */
+	private static UserUtil uUtil = new UserUtil();
     private static ApiUtil aUtil = new ApiUtil();
+    // mvc.properties > ConfigProp > ConfigUtil
+	private static int setMin = ConfigUtil.OTPmin;           // window:앞뒤로 몇 분씩 허용할 건지 (1 : 이전-현재-다음)
+    private static long T0 = ConfigUtil.OTPt0;               // default=0   ->  T를 unix 시간으로 구했으니 이대로 0
+    private static long X = ConfigUtil.OTPx;                 // default=30
+    private static int digit = ConfigUtil.OTPdigit;          // default=6
+    private static String alg = ConfigUtil.OTPalg;   		// default=SHA1
 
+	/* 생성자 */
+	// 기본 - 생략
     
-    //생성자
-    public OtpUtil(){}
-    
-    //메서드
-    public String genSeed() throws Exception {
+    /* 함수 */
+    // seed 생성
+    private String genSeed() throws Exception {
         String result = "";
-        try {
-            String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789"; 
-            int n = 32; // 길이 either 20 or 32
-            StringBuilder sb = new StringBuilder(n); 
-            for (int i = 0; i < n; i++) { 
-                int index = (int)(AlphaNumericString.length() * Math.random()); 
-                sb.append(AlphaNumericString.charAt(index)); 
-            } 
-            String s = sb.toString(); // 여기서 hexlify까지 해줘야 otpkey 완성
-            String otpkey = "";
-            for (int i = 0; i < s.length(); i++) {
-                otpkey += String.format("%02X", (int) s.charAt(i));
-            }
-            result = otpkey.toLowerCase();
-        } catch (Exception e) {
-            e.printStackTrace();
+        String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789"; 
+        int n = 32; // 길이 either 20 or 32
+        StringBuilder sb = new StringBuilder(n); 
+        for (int i = 0; i < n; i++) { 
+            int index = (int)(AlphaNumericString.length() * Math.random()); 
+            sb.append(AlphaNumericString.charAt(index)); 
+        } 
+        String s = sb.toString(); // 여기서 hexlify까지 해줘야 otpkey 완성
+        String otpkey = "";
+        for (int i = 0; i < s.length(); i++) {
+            otpkey += String.format("%02X", (int) s.charAt(i));
         }
+        result = otpkey.toLowerCase();
         return result;
     }
-    
-    public ArrayList<String> genOtp(String seed) throws Exception {
-        ArrayList<String> result = new ArrayList<String>();
+    // window에 맞게 OTP 생성
+    private List<String> genOtp(String seed) throws Exception {
+        List<String> result = new ArrayList<String>();
 
         long curMs = System.currentTimeMillis();
         long current = curMs / 1000L;   // ms 에서 s로
@@ -81,7 +71,7 @@ public class OtpUtil {
         
         return result;
     }
-    
+    // OTP 생성
     private String generateTOTP(String sec32, long T, int digit, String alg) throws Exception {
         String result = "";
 
@@ -114,7 +104,7 @@ public class OtpUtil {
 
         return result;
     }
-
+    // hex에서 byte로
     private byte[] hexStr2Bytes(String hex) throws Exception {
         byte[] bArray = new BigInteger("10" + hex,16).toByteArray();    
         byte[] ret = new byte[bArray.length - 1];
@@ -123,41 +113,50 @@ public class OtpUtil {
         }
         return ret;
     }
-
+    // SHA256 암호화
     private byte[] hmac_sha(String crypto, byte[] keyBytes, byte[] text) throws Exception {
-        try {
-            Mac hmac;
-            hmac = Mac.getInstance(crypto);
-            SecretKeySpec macKey = new SecretKeySpec(keyBytes, "RAW");
-            hmac.init(macKey);
-            return hmac.doFinal(text);
-        } catch (GeneralSecurityException gse) {
-            throw new UndeclaredThrowableException(gse);
-        }
+        Mac hmac;
+        hmac = Mac.getInstance(crypto);
+        SecretKeySpec macKey = new SecretKeySpec(keyBytes, "RAW");
+        hmac.init(macKey);
+        return hmac.doFinal(text);
     }
-
-    public ArrayList<String> genOtpNupdate(UserDTO uDTO) throws Exception {
-        String seed = genSeed();
-        ArrayList<String> result = genOtp(seed);
-        uDTO.setSeed(seed);
-        uUtil.updateUser(uDTO);
+    // OTP 생성 후 USERS 테이블 업데이트
+    public List<String> genOtpNupdate(UserDTO uDTO) {
+    	List<String> result = new ArrayList<String>();
+		String seed = "";
+		try {
+			seed = genSeed();
+            result = genOtp(seed);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if(seed != null && !seed.equals("")) {
+			uDTO.setSeed(seed);
+	        uUtil.updateUser(uDTO);
+		}
         return result;
     }
-    
-    public Map<String,Object> checkOTPnUpdate(UserDTO uDTO, String typed)  throws Exception {
+    // OTP 확인 후 OTPTBL 테이블 업데이트
+    public Map<String,Object> checkOTPnUpdate(UserDTO uDTO, String typed) {
         Map<String,Object> result = new HashMap<String,Object>();
         boolean flagCorrect = false;
         String msg = "";
         
-        try {
-        	OtpDTO oDTO1 = new OtpDTO(uDTO.getId(), typed);
-        	if(uUtil.usedOtp(oDTO1)) {
-        		msg = "Used OTP";
-        	} else {
-        		String seed = uUtil.getUser(uDTO).get("seed").toString();
-        		ArrayList<String> curList =  genOtp(seed);
-
-        		OtpDTO oDTODb = new OtpDTO(uDTO.getId());
+    	OtpDTO oDTO1 = new OtpDTO(uDTO.getId(), typed);
+    	if(uUtil.usedOtp(oDTO1)) {
+    		msg = "Used OTP";
+    	} else {
+    		String seed = uUtil.getUser(uDTO).get("seed").toString();
+    		List<String> curList =  new ArrayList<>();
+    		try {
+    			curList = genOtp(seed);
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    		}
+    		
+    		if(curList!=null && curList.size()>0) {
+    			OtpDTO oDTODb = new OtpDTO(uDTO.getId());
                 List<Map<String,Object>> dbList = uUtil.getOtptbl(oDTODb);
 
         		List<OtpDTO> oDTOlist = new ArrayList<OtpDTO>();
@@ -188,23 +187,19 @@ public class OtpUtil {
         		} else {
         			msg = "Wrong OTP";
         		}
-        	}
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        result.put("result", flagCorrect);
-        if(!flagCorrect) {
-            result.put("msg", msg);
-        }
+    		}
+    	}
+    	 result.put("result", flagCorrect);
+         if(!flagCorrect) {
+             result.put("msg", msg);
+         }
         return result;
     }
     
     
-    ////////// Controller의 역할을 최대한 줄이도록 //////////
-    
-    // 발급
-    public Map<String,Object> otpgen(HttpServletRequest request) throws Exception {
+    ////////// Controller 역할 축소 //////////
+    // 사용자 확인 후 OTP 발급
+    public Map<String,Object> otpgen(HttpServletRequest request) {
     	Map<String,Object> result = new HashMap<String,Object>();
 	    boolean resBool = false;
 		String msg = "";
@@ -214,7 +209,7 @@ public class OtpUtil {
 			String body = jic.get("body").toString();
 			UserDTO uDTO = uUtil.getUserFromStr(body);
 			if(uUtil.correctUser(uDTO)) {
-				ArrayList<String> usrOtpList = genOtpNupdate(uDTO);
+				List<String> usrOtpList = genOtpNupdate(uDTO);
 				resBool = true;
 				result.put("otp_info", usrOtpList);
 			} else {
@@ -230,9 +225,8 @@ public class OtpUtil {
 		}
 		return result;
     }
-    
-    // 인증
-    public Map<String,Object> otpchk(HttpServletRequest request) throws Exception {
+    // 사용자 확인 후 OTP 인증
+    public Map<String,Object> otpchk(HttpServletRequest request) {
     	Map<String,Object> result = new HashMap<String,Object>();
     	boolean resBool = false;
 		String msg = "";
@@ -242,15 +236,17 @@ public class OtpUtil {
 			String body = jic.get("body").toString();
 			UserDTO uDTO = uUtil.getUserFromStr(body);
 			if(uUtil.correctUser(uDTO)) {
-				
 				JSONParser parser = new JSONParser();
-				JSONObject jObj2 = (JSONObject) parser.parse(body);
-				String typed = (String) jObj2.get("otp");
-				
-				Map<String,Object> chkCorrectRes = checkOTPnUpdate(uDTO, typed);
-				resBool = (boolean) chkCorrectRes.get("result");
-				if(!resBool) {
-					msg = chkCorrectRes.get("msg").toString();
+				try {
+					JSONObject jObj2 = (JSONObject) parser.parse(body);
+					String typed = (String) jObj2.get("otp");
+					Map<String,Object> chkCorrectRes = checkOTPnUpdate(uDTO, typed);
+					resBool = (boolean) chkCorrectRes.get("result");
+					if(!resBool) {
+						msg = chkCorrectRes.get("msg").toString();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			} else {
 				msg = "Wrong PW / Unregistered User";
