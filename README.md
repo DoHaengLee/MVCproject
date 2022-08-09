@@ -4,6 +4,7 @@
 - JDK 1.8
 - Tomcat 8.5
 - h2
+- path : C:\Users\Public\Documents\MVCpjt
 
 ---
 **USER**
@@ -30,15 +31,15 @@
 **CRYPT**
 1. aes256enc_view : AES256으로 암호화 페이지
 2. aes256ede_view : AES256으로 복호화 페이지
+- RSA 암복호화 : 생성 후 암호화, 파일 저장 및 읽어온 후 복호화 단위테스트 완료
 
 #
 **FILE**
-- 단위 테스트 내 test.csv 위치 : C:\Users\Public\Documents\MVCpjt
 
--- test.csv 내용 시작 --
+-- 단위테스트 내 test.csv 내용 시작 --
 
 some,kind,of,test
 
 1,Y,2019,63479283
 
--- test.csv 내용 끝 --
+-- 단위테스트 내 test.csv 내용 끝 --
