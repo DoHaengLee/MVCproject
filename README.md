@@ -25,3 +25,20 @@
 2. otpchk_view : ID/PW/OTP 인증 페이지
 - AES256으로 암호화 하여 seed 저장
 - OTP 재사용 방지 로직 추가
+
+#
+**CRYPT**
+1. aes256enc_view : AES256으로 암호화 페이지
+2. aes256ede_view : AES256으로 복호화 페이지
+
+#
+**FILE**
+- 단위 테스트 내 test.csv 위치 : C:\Users\Public\Documents\MVCpjt
+
+-- test.csv 내용 시작 --
+
+some,kind,of,test
+
+1,Y,2019,63479283
+
+-- test.csv 내용 끝 --
