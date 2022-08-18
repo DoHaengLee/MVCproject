@@ -1,3 +1,9 @@
+# Spring Boot Project
+
+https://github.com/DoHaengLee/BootProject
+
+---
+
 # MVCproject - JWT, TOTP / RSA, AES256
 
 **Spring (MVC2)**
@@ -6,7 +12,7 @@
 - h2
 - path : C:\Users\Public\Documents\MVCpjt
 
----
+#
 **USER**
 1. signup_view : 사용자 등록 페이지 (필수)
 - bcrypt로 암호화 하여 pw 저장
